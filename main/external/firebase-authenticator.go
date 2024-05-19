@@ -4,16 +4,18 @@ import (
 	"context"
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
-	IdentityParsingError     = 1
-	ClientInstantiationError = 2
-	IdTokenInvalidError      = 3
+	IdentityParsingError       = 1
+	ClientInstantiationError   = 2
+	TokenInvalidSignatureError = 3
 )
 
 type FirebaseError struct {
@@ -43,16 +45,9 @@ func NewFirebaseAuthenticator() *FirebaseAuthenticator {
 }
 
 func (i *FirebaseAuthenticator) Validate(c echo.Context) error {
-	defer func(i *FirebaseAuthenticator, c echo.Context) {
-		err := i.handleError(c)
-		if err != nil {
-			log.Fatalf("Unknown error: %v\n", err)
-		}
-	}(i, c)
-
+	defer i.handleError(c)
 	identity := i.parseFirebaseIdentity(c)
 	i.verifyId(identity)
-
 	return c.JSON(http.StatusOK, ValidResponse{Message: "Token is valid"})
 }
 
@@ -68,7 +63,10 @@ func (i *FirebaseAuthenticator) verifyId(identity *FirebaseIdentity) {
 	client := i.loadClient()
 	_, err := client.VerifyIDToken(context.Background(), identity.IdToken)
 	if err != nil {
-		panic(IdTokenInvalidError)
+		if strings.Contains(fmt.Sprint(err), "failed to verify token signature") {
+			panic(TokenInvalidSignatureError)
+		}
+		log.Fatalf("UNKNOWN TOKEN VALIDATION ERROR: %v\n", err)
 	}
 }
 
@@ -80,19 +78,18 @@ func (i *FirebaseAuthenticator) loadClient() *auth.Client {
 	return client
 }
 
-func (i *FirebaseAuthenticator) handleError(c echo.Context) error {
+func (i *FirebaseAuthenticator) handleError(c echo.Context) {
 	if r := recover(); r != nil {
-		println(r)
 		switch r {
 		case IdentityParsingError:
-			return c.JSON(http.StatusBadRequest, FirebaseError{ErrorCode: i.mapError(IdentityParsingError), Message: "Unable to parse identity object"})
-		case IdTokenInvalidError:
-			return c.JSON(http.StatusUnauthorized, FirebaseError{ErrorCode: i.mapError(IdTokenInvalidError), Message: "Token is invalid"})
+			_ = c.JSON(http.StatusBadRequest, FirebaseError{ErrorCode: i.mapError(IdentityParsingError), Message: "Unable to parse identity object"})
+		case TokenInvalidSignatureError:
+			_ = c.JSON(http.StatusUnauthorized, FirebaseError{ErrorCode: i.mapError(TokenInvalidSignatureError), Message: "Token is invalid"})
 		case ClientInstantiationError:
+			_ = c.JSON(http.StatusInternalServerError, FirebaseError{ErrorCode: i.mapError(ClientInstantiationError), Message: "Unable to instantiate firebase client"})
 			log.Fatalf("Unable to create client instance")
 		}
 	}
-	return nil
 }
 
 func (i *FirebaseAuthenticator) mapError(code int) string {
@@ -101,8 +98,8 @@ func (i *FirebaseAuthenticator) mapError(code int) string {
 		return "IDENTITY_PARSING_ERROR"
 	case ClientInstantiationError:
 		return "CLIENT_INSTANTIATION_ERROR"
-	case IdTokenInvalidError:
-		return "ID_TOKEN_INVALID_ERROR"
+	case TokenInvalidSignatureError:
+		return "TOKEN_INVALID_SIGNATURE_ERROR"
 	default:
 		return "UNKNOWN_ERROR"
 	}
