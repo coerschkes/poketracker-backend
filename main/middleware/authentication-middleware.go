@@ -38,10 +38,11 @@ func (i *AuthenticationMiddleware) Chain(next echo.HandlerFunc) echo.HandlerFunc
 		if token == "" {
 			return c.JSON(400, ErrorMessage{"Unable to parse authorization header}"})
 		}
-		err := i.verifyToken(token)
+		responseToken, err := i.verifyToken(token)
 		if err != nil {
 			return c.JSON(401, ErrorMessage{"Token is invalid"})
 		}
+		c.Set("userToken", responseToken)
 		return next(c)
 	}
 }
@@ -57,15 +58,15 @@ func (i *AuthenticationMiddleware) parseAuthorizationHeader(c echo.Context) stri
 	}
 }
 
-func (i *AuthenticationMiddleware) verifyToken(token string) error {
-	_, err := i.firebaseAdminSdkClient.VerifyIDToken(context.Background(), token)
+func (i *AuthenticationMiddleware) verifyToken(token string) (*auth.Token, error) {
+	responseToken, err := i.firebaseAdminSdkClient.VerifyIDToken(context.Background(), token)
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "failed to verify token signature") {
 			log.Printf("unable to verify token: '%v'\n", err)
 		} else {
 			log.Printf("unknown token validation error: '%v'\n", err)
 		}
-		return err
+		return nil, err
 	}
-	return nil
+	return responseToken, nil
 }
