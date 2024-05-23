@@ -10,6 +10,7 @@ type PokemonRepository interface {
 }
 
 type PokemonRepositoryImpl struct {
+	UserId int
 }
 
 func NewPokemonRepositoryImpl() *PokemonRepositoryImpl {

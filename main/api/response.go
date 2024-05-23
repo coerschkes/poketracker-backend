@@ -1,5 +1,6 @@
 package api
 
-type ResponseEntityWrapper struct {
-	Entity interface{}
+type ResponseWrapper struct {
+	StatusCode int
+	Entity     interface{}
 }

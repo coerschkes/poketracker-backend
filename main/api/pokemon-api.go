@@ -25,9 +25,11 @@ func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
 
 func (i *PokemonApi) findAll() func(c echo.Context) error {
 	return func(c echo.Context) error {
+		//todo: handle error when usertoken not set
 		userToken := c.Get("userToken").(*auth.Token)
-		println(userToken.UID)
-		return c.JSON(http.StatusOK, i.repository.FindAll())
+		//todo: set userToken on repo
+		println(userToken)
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, i.repository.FindAll()})
 	}
 }
 
@@ -37,7 +39,7 @@ func (i *PokemonApi) find() func(c echo.Context) error {
 		id := c.Param("id")
 		//todo: handle error here
 		parsedId, _ := strconv.Atoi(id)
-		return c.JSON(http.StatusOK, i.repository.Find(parsedId))
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, i.repository.Find(parsedId)})
 	}
 }
 
@@ -46,7 +48,7 @@ func (i *PokemonApi) create() func(c echo.Context) error {
 		//todo read body here, create if not exists
 		//todo: handle errors
 		urlString := c.Request().Host + c.Request().URL.RequestURI() + "/<PokemonIdHere>"
-		return c.JSON(http.StatusCreated, ResponseEntityWrapper{urlString})
+		return c.JSON(http.StatusCreated, ResponseWrapper{http.StatusCreated, urlString})
 	}
 }
 
@@ -57,6 +59,6 @@ func (i *PokemonApi) delete() func(c echo.Context) error {
 		//todo: handle error here
 		parsedId, _ := strconv.Atoi(id)
 		i.repository.Delete(parsedId)
-		return c.JSON(http.StatusOK, ResponseEntityWrapper{Entity: "pokemon with id " + id + " has been deleted"})
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, "pokemon with id " + id + " has been deleted"})
 	}
 }
