@@ -2,13 +2,16 @@ package main
 
 import (
 	"github.com/labstack/echo/v4"
-	"poketracker-backend/main/external"
+	"net/http"
+	"poketracker-backend/main/middleware"
 )
 
 func main() {
 	e := echo.New()
-	fb := external.NewFirebaseAuthenticator()
-	e.POST("/validate", fb.Validate)
+	e.Use()
+	e.GET("test", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, "hello world")
+	}, middleware.NewAuthenticationMiddleware().Authenticate)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
