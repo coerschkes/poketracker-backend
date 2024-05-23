@@ -1,5 +1,12 @@
 create database poketracker;
 
+create table UserAccount
+(
+    id          serial unique primary key,
+    firebaseUid varchar(255) unique not null,
+    mail        varchar(255) unique not null
+);
+
 create table Pokemon
 (
     dex       int unique primary key,
@@ -8,7 +15,8 @@ create table Pokemon
     shiny     boolean             not null,
     normal    boolean             not null,
     universal boolean             not null,
-    regional  boolean             not null
+    regional  boolean             not null,
+    userId    serial              not null references UserAccount (id)
 );
 
 create table Edition
