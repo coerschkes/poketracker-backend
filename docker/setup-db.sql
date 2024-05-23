@@ -27,11 +27,10 @@ create table Edition
 
 create table PokemonEditionRelation
 (
-    pokemonDexNr int          not null,
-    editionName  varchar(255) not null,
-    foreign key (pokemonDexNr) REFERENCES Pokemon (dex),
-    foreign key (editionName) REFERENCES Edition (name),
-    UNIQUE (pokemonDexNr, editionName)
+    pokemonDexNr int          not null references Pokemon (dex),
+    editionName  varchar(255) not null references Edition (name),
+    userId       serial       not null references UserAccount (id),
+    UNIQUE (pokemonDexNr, editionName, userId)
 );
 
 insert into edition
