@@ -1,34 +1,45 @@
 package external
 
-import "poketracker-backend/main/domain"
+import (
+	_ "github.com/lib/pq"
+	"poketracker-backend/main/domain"
+	"strconv"
+)
+
+//todo: install go get github.com/lib/pq for postgres communication https://pkg.go.dev/github.com/lib/pq#section-readme
+//todo: https://echo.labstack.com/docs/context for user information retrieval (custom context?)
 
 type PokemonRepository interface {
-	FindAll() []domain.Pokemon
-	Create(pokemon domain.Pokemon)
-	Delete(id int)
-	Find(id int) domain.Pokemon
+	FindAll() ([]domain.Pokemon, error)
+	Create(pokemon domain.Pokemon) error
+	Delete(id int) error
+	Find(id int) (domain.Pokemon, error)
 }
 
 type PokemonRepositoryImpl struct {
-	UserId int
+	UserId    int
+	Connector *DatabaseConnector
 }
 
-func NewPokemonRepositoryImpl() *PokemonRepositoryImpl {
-	return &PokemonRepositoryImpl{}
+func NewPokemonRepositoryImpl(userId int) *PokemonRepositoryImpl {
+	return &PokemonRepositoryImpl{UserId: userId, Connector: NewDatabaseConnector()}
 }
 
-func (i *PokemonRepositoryImpl) FindAll() []domain.Pokemon {
-	/*
-		todo:
-			* check if user exists
-			* retrieve all pokemon where user id is equal to the current userid
-			* lazy load pokemon edition relation
-			* return pokemon slice
-	*/
+func (i *PokemonRepositoryImpl) FindAll() ([]domain.Pokemon, error) {
+	var err error = nil
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+	mapper := NewPokemonMapper()
+	//todo: load pokemon edition relation
+	result := i.Connector.Query("SELECT * FROM pokemon WHERE pokemon.userId = $1", mapper, strconv.Itoa(i.UserId))
+	return result.([]domain.Pokemon), err
+}
+
+func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon) error {
 	return nil
-}
-
-func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon) {
 	/*
 		todo:
 			* check if user exists
@@ -38,7 +49,8 @@ func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon) {
 	*/
 }
 
-func (i *PokemonRepositoryImpl) Delete(id int) {
+func (i *PokemonRepositoryImpl) Delete(id int) error {
+	return nil
 	/*
 		todo:
 			* check if user exists
@@ -49,7 +61,7 @@ func (i *PokemonRepositoryImpl) Delete(id int) {
 	*/
 }
 
-func (i *PokemonRepositoryImpl) Find(id int) domain.Pokemon {
+func (i *PokemonRepositoryImpl) Find(id int) (domain.Pokemon, error) {
 	/*
 		todo:
 			* check if user exists
@@ -58,5 +70,5 @@ func (i *PokemonRepositoryImpl) Find(id int) domain.Pokemon {
 			* load pokemon edition relation
 			* return
 	*/
-	return domain.Pokemon{}
+	return domain.Pokemon{}, nil
 }

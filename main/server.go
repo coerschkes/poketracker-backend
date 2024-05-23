@@ -10,8 +10,9 @@ func main() {
 	e := echo.New()
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	//add authentication when needed
-	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
-	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain)
+	//authenticationMiddleware := middleware.NewAuthenticationMiddleware()
+	//e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain)
+	e.Use(loggerMiddleware.Chain)
 
 	apiGroup := e.Group("/api")
 	pokemonApi := api.NewPokemonApi()

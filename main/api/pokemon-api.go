@@ -1,7 +1,6 @@
 package api
 
 import (
-	"firebase.google.com/go/v4/auth"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"poketracker-backend/main/external"
@@ -13,7 +12,7 @@ type PokemonApi struct {
 }
 
 func NewPokemonApi() *PokemonApi {
-	return &PokemonApi{repository: external.NewPokemonRepositoryImpl()}
+	return &PokemonApi{repository: external.NewPokemonRepositoryImpl(1)}
 }
 
 func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
@@ -26,10 +25,14 @@ func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
 func (i *PokemonApi) findAll() func(c echo.Context) error {
 	return func(c echo.Context) error {
 		//todo: handle error when usertoken not set
-		userToken := c.Get("userToken").(*auth.Token)
+		//userToken := c.Get("userToken").(*auth.Token)
 		//todo: set userToken on repo
-		println(userToken)
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, i.repository.FindAll()})
+		//println(userToken)
+		all, err := i.repository.FindAll()
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ResponseWrapper{http.StatusInternalServerError, err.Error()})
+		}
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, all})
 	}
 }
 
@@ -39,7 +42,11 @@ func (i *PokemonApi) find() func(c echo.Context) error {
 		id := c.Param("id")
 		//todo: handle error here
 		parsedId, _ := strconv.Atoi(id)
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, i.repository.Find(parsedId)})
+		find, err := i.repository.Find(parsedId)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ResponseWrapper{http.StatusInternalServerError, err.Error()})
+		}
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, find})
 	}
 }
 
