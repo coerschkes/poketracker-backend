@@ -5,11 +5,14 @@ import (
 	"net/http"
 )
 
-func RegisterUserApiRoutes(group *echo.Group) {
-	group.GET("/user", func(c echo.Context) error {
-		//todo: return all pokemon here
-		return c.JSON(http.StatusOK, "hello world")
-	})
+type UserApi struct {
+}
+
+func NewUserApi() *UserApi {
+	return &UserApi{}
+}
+
+func (i *UserApi) RegisterRoutes(group *echo.Group) {
 	group.GET("/user/:id", func(c echo.Context) error {
 		id := c.Param("id")
 		return c.JSON(http.StatusOK, "test "+id)
