@@ -32,7 +32,7 @@ func NewAuthenticationMiddleware() *AuthenticationMiddleware {
 	return &AuthenticationMiddleware{firebaseAdminSdkClient: client}
 }
 
-func (i *AuthenticationMiddleware) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
+func (i *AuthenticationMiddleware) Chain(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token := i.parseAuthorizationHeader(c)
 		if token == "" {
