@@ -6,8 +6,12 @@ import (
 	"strconv"
 )
 
-//todo: install go get github.com/lib/pq for postgres communication https://pkg.go.dev/github.com/lib/pq#section-readme
 //todo: https://echo.labstack.com/docs/context for user information retrieval (custom context?)
+
+const (
+	selectPokemonQuery  = "SELECT * FROM pokemon WHERE pokemon.userId = $1"
+	selectEditionsQuery = "SELECT editionname FROM pokemoneditionrelation WHERE pokemondexnr = $1 AND userId = $2"
+)
 
 type PokemonRepository interface {
 	FindAll() ([]domain.Pokemon, error)
@@ -27,15 +31,14 @@ func NewPokemonRepositoryImpl(userId int) *PokemonRepositoryImpl {
 
 func (i *PokemonRepositoryImpl) FindAll() ([]domain.Pokemon, error) {
 	var err error = nil
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-	mapper := NewPokemonMapper()
-	//todo: load pokemon edition relation
-	result := i.Connector.Query("SELECT * FROM pokemon WHERE pokemon.userId = $1", mapper, strconv.Itoa(i.UserId))
-	return result.([]domain.Pokemon), err
+	defer i.recoverError(&err)
+
+	pokemonResults := i.Connector.Query(selectPokemonQuery, NewPokemonMapper(), strconv.Itoa(i.UserId)).([]domain.Pokemon)
+	for index := range pokemonResults {
+		result := i.Connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemonResults[index].Dex), strconv.Itoa(i.UserId))
+		pokemonResults[index].Editions = result.([]string)
+	}
+	return pokemonResults, err
 }
 
 func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon) error {
@@ -71,4 +74,10 @@ func (i *PokemonRepositoryImpl) Find(id int) (domain.Pokemon, error) {
 			* return
 	*/
 	return domain.Pokemon{}, nil
+}
+
+func (*PokemonRepositoryImpl) recoverError(err *error) {
+	if r := recover(); r != nil {
+		*err = r.(error)
+	}
 }
