@@ -42,8 +42,8 @@ func (i *AuthenticationMiddleware) Chain(next echo.HandlerFunc) echo.HandlerFunc
 		if err != nil {
 			return c.JSON(401, ErrorMessage{"Token is invalid"})
 		}
-		c.Set("userToken", responseToken)
-		return next(c)
+		cc := &AuthenticationContext{c, responseToken}
+		return next(cc)
 	}
 }
 
