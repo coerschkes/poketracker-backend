@@ -8,6 +8,7 @@ import (
 
 func main() {
 	e := echo.New()
+	e.HTTPErrorHandler = middleware.NewHttpErrorHandler().HandleError
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
 	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain)

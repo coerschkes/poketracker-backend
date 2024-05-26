@@ -4,68 +4,83 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"poketracker-backend/main/external"
+	"poketracker-backend/main/middleware"
 	"strconv"
 )
 
 type PokemonApi struct {
-	repository external.PokemonRepository
+	pokemonRepository external.PokemonRepository
+	userRepository    external.UserRepository
 }
 
 func NewPokemonApi() *PokemonApi {
-	return &PokemonApi{repository: external.NewPokemonRepositoryImpl(1)}
+	return &PokemonApi{pokemonRepository: external.NewPokemonRepositoryImpl(), userRepository: external.NewUserRepositoryImpl()}
 }
 
 func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
 	group.GET("/pokemon", i.findAll())
-	group.GET("/pokemon/:id", i.find())
+	group.GET("/pokemon/:dex", i.find())
 	group.POST("/pokemon", i.create())
-	group.DELETE("/pokemon/:id", i.delete())
+	group.DELETE("/pokemon/:dex", i.delete())
 }
 
 func (i *PokemonApi) findAll() func(c echo.Context) error {
 	return func(c echo.Context) error {
-		//todo: handle error when usertoken not set
-		//userToken := c.Get("userToken").(*auth.Token)
-		//todo: set userToken on repo
-		//println(userToken)
-		all, err := i.repository.FindAll()
+		userId, err := i.loadUserId(c)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, ResponseWrapper{http.StatusInternalServerError, err.Error()})
+			return err
 		}
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, all})
+
+		result, err := i.pokemonRepository.FindAll(userId)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, result})
 	}
 }
 
 func (i *PokemonApi) find() func(c echo.Context) error {
 	return func(c echo.Context) error {
-		//todo: check id for correctness
-		id := c.Param("id")
-		//todo: handle error here
-		parsedId, _ := strconv.Atoi(id)
-		find, err := i.repository.Find(parsedId)
+		userId, err := i.loadUserId(c)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, ResponseWrapper{http.StatusInternalServerError, err.Error()})
+			return err
 		}
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, find})
+
+		dex := c.Param("dex")
+		parsedId, _ := strconv.Atoi(dex)
+		result, err := i.pokemonRepository.Find(parsedId, userId)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, result})
 	}
 }
 
 func (i *PokemonApi) create() func(c echo.Context) error {
 	return func(c echo.Context) error {
-		//todo read body here, create if not exists
-		//todo: handle errors
-		urlString := c.Request().Host + c.Request().URL.RequestURI() + "/<PokemonIdHere>"
-		return c.JSON(http.StatusCreated, ResponseWrapper{http.StatusCreated, urlString})
+		return c.JSON(http.StatusBadRequest, ResponseWrapper{http.StatusNotFound, "not implemented yet "})
 	}
 }
 
 func (i *PokemonApi) delete() func(c echo.Context) error {
 	return func(c echo.Context) error {
-		//todo: check id for correctness
-		id := c.Param("id")
-		//todo: handle error here
-		parsedId, _ := strconv.Atoi(id)
-		i.repository.Delete(parsedId)
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, "pokemon with id " + id + " has been deleted"})
+		dex := c.Param("dex")
+		userId, err := i.loadUserId(c)
+		if err != nil {
+			return err
+		}
+
+		parsedDex, _ := strconv.Atoi(dex)
+		err = i.pokemonRepository.Delete(parsedDex, userId)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, "pokemon with dex " + dex + " has been deleted"})
 	}
+}
+
+func (i *PokemonApi) loadUserId(c echo.Context) (int, error) {
+	token := c.(*middleware.AuthenticationContext).GetToken()
+	result, err := i.userRepository.Find(token.UID)
+	return result, err
 }
