@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"poketracker-backend/main/domain"
 	"poketracker-backend/main/external"
 	"poketracker-backend/main/middleware"
 	"strconv"
@@ -57,8 +58,23 @@ func (i *PokemonApi) find() func(c echo.Context) error {
 }
 
 func (i *PokemonApi) create() func(c echo.Context) error {
-	return func(c echo.Context) error {
-		return c.JSON(http.StatusBadRequest, ResponseWrapper{http.StatusNotFound, "not implemented yet "})
+	return func(c echo.Context) (err error) {
+		p := new(domain.Pokemon)
+		if err = c.Bind(p); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		if err = c.Validate(p); err != nil {
+			return err
+		}
+		userId, err := i.loadUserId(c)
+		if err != nil {
+			return err
+		}
+		err = i.pokemonRepository.Create(*p, userId)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusCreated, ResponseWrapper{http.StatusCreated, p})
 	}
 }
 

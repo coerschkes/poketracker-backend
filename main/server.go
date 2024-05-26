@@ -12,6 +12,7 @@ func main() {
 	e := echo.New()
 	e.HTTPErrorHandler = middleware.NewHttpErrorHandler().HandleError
 	e.Validator = &domain.UserValidator{Validator: validator.New()}
+	e.Validator = &domain.PokemonValidator{Validator: validator.New()}
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
 	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain)

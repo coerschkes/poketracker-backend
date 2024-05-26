@@ -20,7 +20,7 @@ type AuthenticationMiddleware struct {
 }
 
 func NewAuthenticationMiddleware() *AuthenticationMiddleware {
-	opt := option.WithCredentialsFile("../config/firebase-admin-sdk-key.json")
+	opt := option.WithCredentialsFile("config/firebase-admin-sdk-key.json")
 	app, errApp := firebase.NewApp(context.Background(), nil, opt)
 	if errApp != nil {
 		log.Fatalf("error initializing app: %v\n", errApp)
