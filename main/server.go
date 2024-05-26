@@ -1,14 +1,17 @@
 package main
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"poketracker-backend/main/api"
+	"poketracker-backend/main/domain"
 	"poketracker-backend/main/middleware"
 )
 
 func main() {
 	e := echo.New()
 	e.HTTPErrorHandler = middleware.NewHttpErrorHandler().HandleError
+	e.Validator = &domain.UserValidator{Validator: validator.New()}
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
 	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain)

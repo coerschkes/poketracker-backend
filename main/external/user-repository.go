@@ -1,5 +1,7 @@
 package external
 
+import "errors"
+
 const (
 	selectUserQuery = "SELECT id FROM useraccount WHERE firebaseuid = $1"
 )
@@ -32,6 +34,8 @@ func (i *UserRepositoryImpl) Create(firebaseUid string, mail string) error {
 		if err != nil {
 			return err
 		}
+		return nil
+	} else {
+		return errors.New("user already exists")
 	}
-	return err
 }
