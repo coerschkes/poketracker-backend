@@ -32,6 +32,8 @@ func (h HttpErrorHandler) MapError(err error, c echo.Context) error {
 		return c.JSON(400, ErrorMessage{"Error while fetching pokemon"})
 	case "error while deleting pokemon":
 		return c.JSON(400, ErrorMessage{"Error while deleting pokemon"})
+	case "pokemon already exists":
+		return c.JSON(400, ErrorMessage{"Pokemon already exists"})
 	default:
 		return c.JSON(500, ErrorMessage{"Internal server error"})
 	}

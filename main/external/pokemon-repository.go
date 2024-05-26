@@ -50,15 +50,22 @@ func (i *PokemonRepositoryImpl) FindAll(userId int) ([]domain.Pokemon, error) {
 }
 
 func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId int) error {
-	//todo: check if exists needed?
-	//var err error = nil
-	//defer i.errorHandler.logError(&err)
-	//
-	//i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pokemon.Types, pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId)
-	//for index := range pokemon.Editions {
-	//	i.connector.Execute(insertIntoPokemonEditionsStatement, pokemon.Dex, userId, pokemon.Editions[index])
-	//}
-	return errors.New("not implemented")
+	_, err := i.Find(pokemon.Dex, userId)
+	if err != nil {
+		_, err := i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pokemon.Types, pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId)
+		if err != nil {
+			return err
+		}
+		for index := range pokemon.Editions {
+			_, err := i.connector.Execute(insertIntoPokemonEditionsStatement, pokemon.Dex, userId, pokemon.Editions[index])
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	} else {
+		return errors.New("pokemon already exists")
+	}
 }
 
 func (i *PokemonRepositoryImpl) Delete(dex int, userId int) error {
