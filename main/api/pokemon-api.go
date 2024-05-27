@@ -23,6 +23,17 @@ func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
 	group.GET("/pokemon/:dex", i.find())
 	group.POST("/pokemon", i.create())
 	group.DELETE("/pokemon/:dex", i.delete())
+	group.OPTIONS("/pokemon", i.options("GET, POST"))
+	group.OPTIONS("/pokemon/:dex", i.options("GET, DELETE"))
+}
+
+func (i *PokemonApi) options(methods string) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		c.Response().Header().Set(echo.HeaderAccessControlAllowMethods, methods)
+		c.Response().Header().Set(echo.HeaderAccessControlAllowHeaders, "Content-Type, Authorization")
+		c.Response().WriteHeader(http.StatusOK)
+		return nil
+	}
 }
 
 func (i *PokemonApi) findAll() func(c echo.Context) error {

@@ -20,7 +20,7 @@ type AuthenticationMiddleware struct {
 }
 
 func NewAuthenticationMiddleware() *AuthenticationMiddleware {
-	opt := option.WithCredentialsFile("config/firebase-admin-sdk-key.json")
+	opt := option.WithCredentialsFile("../config/firebase-admin-sdk-key.json")
 	app, errApp := firebase.NewApp(context.Background(), nil, opt)
 	if errApp != nil {
 		log.Fatalf("error initializing app: %v\n", errApp)
@@ -34,6 +34,9 @@ func NewAuthenticationMiddleware() *AuthenticationMiddleware {
 
 func (i *AuthenticationMiddleware) Chain(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		if c.Request().Method == "OPTIONS" {
+			return next(c)
+		}
 		token := i.parseAuthorizationHeader(c)
 		if token == "" {
 			return c.JSON(400, ErrorMessage{"Unable to parse authorization header}"})

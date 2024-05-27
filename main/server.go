@@ -15,7 +15,8 @@ func main() {
 	e.Validator = &domain.PokemonValidator{Validator: validator.New()}
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
-	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain)
+	headerMiddleware := middleware.NewHeaderMiddleware()
+	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain, headerMiddleware.Chain)
 
 	apiGroup := e.Group("/api")
 	pokemonApi := api.NewPokemonApi()
