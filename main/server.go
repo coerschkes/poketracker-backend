@@ -16,7 +16,7 @@ func main() {
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
 	headerMiddleware := middleware.NewHeaderMiddleware()
-	e.Use(loggerMiddleware.Chain, authenticationMiddleware.Chain, headerMiddleware.Chain)
+	e.Use(loggerMiddleware.Chain, headerMiddleware.Chain, authenticationMiddleware.Chain)
 
 	apiGroup := e.Group("/api")
 	pokemonApi := api.NewPokemonApi()
