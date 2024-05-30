@@ -12,7 +12,6 @@ type (
 		Universal bool     `json:"universal" validate:"required"`
 		Regional  bool     `json:"regional" validate:"required"`
 		Editions  []string `json:"editions" validate:"required"`
-		UserId    int
 	}
 	PokemonValidator struct {
 		Validator *validator.Validate

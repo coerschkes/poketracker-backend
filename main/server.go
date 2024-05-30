@@ -11,7 +11,6 @@ import (
 func main() {
 	e := echo.New()
 	e.HTTPErrorHandler = middleware.NewHttpErrorHandler().HandleError
-	e.Validator = &domain.UserValidator{Validator: validator.New()}
 	e.Validator = &domain.PokemonValidator{Validator: validator.New()}
 	loggerMiddleware := middleware.NewLoggerMiddleware()
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware()
@@ -20,8 +19,7 @@ func main() {
 
 	apiGroup := e.Group("/api")
 	pokemonApi := api.NewPokemonApi()
-	userApi := api.NewUserApi()
-	RegisterApis(apiGroup, pokemonApi, userApi)
+	RegisterApis(apiGroup, pokemonApi)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

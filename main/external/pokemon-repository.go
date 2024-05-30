@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	selectPokemonQuery                 = "SELECT * FROM pokemon WHERE pokemon.userId = $1"
-	selectPokemonByDexQuery            = "SELECT * FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
+	selectPokemonQuery                 = "SELECT dex, name, types, shiny, normal, universal, regional FROM pokemon WHERE pokemon.userId = $1"
+	selectPokemonByDexQuery            = "SELECT dex, name, types, shiny, normal, universal, regional FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
 	selectEditionsQuery                = "SELECT editionname FROM pokemoneditionrelation WHERE pokemondexnr = $1 AND userId = $2"
 	insertIntoPokemonStatement         = "INSERT INTO pokemon (dex, name, types, shiny, normal, universal, regional, userId) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 	insertIntoPokemonEditionsStatement = "INSERT INTO pokemoneditionrelation (pokemondexnr, userId, editionname) VALUES ($1, $2, $3)"
@@ -19,10 +19,10 @@ const (
 )
 
 type PokemonRepository interface {
-	FindAll(userId int) ([]domain.Pokemon, error)
-	Create(pokemon domain.Pokemon, userId int) error
-	Delete(dex int, userId int) error
-	Find(dex int, userId int) (domain.Pokemon, error)
+	FindAll(userId string) ([]domain.Pokemon, error)
+	Create(pokemon domain.Pokemon, userId string) error
+	Delete(dex int, userId string) error
+	Find(dex int, userId string) (domain.Pokemon, error)
 }
 
 type PokemonRepositoryImpl struct {
@@ -33,15 +33,15 @@ func NewPokemonRepositoryImpl() *PokemonRepositoryImpl {
 	return &PokemonRepositoryImpl{connector: NewDatabaseConnector()}
 }
 
-func (i *PokemonRepositoryImpl) FindAll(userId int) ([]domain.Pokemon, error) {
-	query, err := i.connector.Query(selectPokemonQuery, NewPokemonMapper(), strconv.Itoa(userId))
+func (i *PokemonRepositoryImpl) FindAll(userId string) ([]domain.Pokemon, error) {
+	query, err := i.connector.Query(selectPokemonQuery, NewPokemonMapper(), userId)
 	if err != nil {
 		return nil, errors.New("error while fetching pokemon")
 	}
 
 	pokemon := query.([]domain.Pokemon)
 	for index := range pokemon {
-		result, err2 := i.connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemon[index].Dex), strconv.Itoa(userId))
+		result, err2 := i.connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemon[index].Dex), userId)
 		if err2 != nil {
 			return nil, errors.New("error while fetching pokemon")
 		}
@@ -50,7 +50,7 @@ func (i *PokemonRepositoryImpl) FindAll(userId int) ([]domain.Pokemon, error) {
 	return pokemon, nil
 }
 
-func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId int) error {
+func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId string) error {
 	_, err := i.Find(pokemon.Dex, userId)
 	if err != nil {
 		_, err := i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pq.Array(pokemon.Types), pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId)
@@ -69,7 +69,7 @@ func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId int) error
 	}
 }
 
-func (i *PokemonRepositoryImpl) Delete(dex int, userId int) error {
+func (i *PokemonRepositoryImpl) Delete(dex int, userId string) error {
 	rowsAffectedPokemon, err := i.connector.Execute(deleteFromPokemonStatement, dex, userId)
 	rowsAffectedEditions, err := i.connector.Execute(deleteFromPokemonEditionsStatement, dex, userId)
 	if err != nil {
@@ -80,7 +80,7 @@ func (i *PokemonRepositoryImpl) Delete(dex int, userId int) error {
 	return nil
 }
 
-func (i *PokemonRepositoryImpl) Find(dex int, userId int) (domain.Pokemon, error) {
+func (i *PokemonRepositoryImpl) Find(dex int, userId string) (domain.Pokemon, error) {
 	query, err := i.connector.Query(selectPokemonByDexQuery, NewPokemonMapper(), userId, dex)
 	if err != nil {
 		return domain.Pokemon{}, errors.New("error while fetching pokemon")
@@ -88,7 +88,7 @@ func (i *PokemonRepositoryImpl) Find(dex int, userId int) (domain.Pokemon, error
 	pokemonResults := query.([]domain.Pokemon)
 	if len(pokemonResults) > 0 {
 		for index := range pokemonResults {
-			result, err := i.connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemonResults[index].Dex), strconv.Itoa(userId))
+			result, err := i.connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemonResults[index].Dex), userId)
 			if err != nil {
 				return domain.Pokemon{}, errors.New("error while fetching pokemon")
 			}

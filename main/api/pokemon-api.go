@@ -11,11 +11,10 @@ import (
 
 type PokemonApi struct {
 	pokemonRepository external.PokemonRepository
-	userRepository    external.UserRepository
 }
 
 func NewPokemonApi() *PokemonApi {
-	return &PokemonApi{pokemonRepository: external.NewPokemonRepositoryImpl(), userRepository: external.NewUserRepositoryImpl()}
+	return &PokemonApi{pokemonRepository: external.NewPokemonRepositoryImpl()}
 }
 
 func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
@@ -38,25 +37,19 @@ func (i *PokemonApi) options(methods string) func(c echo.Context) error {
 
 func (i *PokemonApi) findAll() func(c echo.Context) error {
 	return func(c echo.Context) error {
-		userId, err := i.loadUserId(c)
-		if err != nil {
-			return err
-		}
+		userId := i.loadUserId(c)
 
 		result, err := i.pokemonRepository.FindAll(userId)
 		if err != nil {
 			return err
 		}
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, result})
+		return c.JSON(http.StatusOK, result)
 	}
 }
 
 func (i *PokemonApi) find() func(c echo.Context) error {
 	return func(c echo.Context) error {
-		userId, err := i.loadUserId(c)
-		if err != nil {
-			return err
-		}
+		userId := i.loadUserId(c)
 
 		dex := c.Param("dex")
 		parsedId, _ := strconv.Atoi(dex)
@@ -64,7 +57,7 @@ func (i *PokemonApi) find() func(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, result})
+		return c.JSON(http.StatusOK, result)
 	}
 }
 
@@ -77,37 +70,30 @@ func (i *PokemonApi) create() func(c echo.Context) error {
 		if err = c.Validate(p); err != nil {
 			return err
 		}
-		userId, err := i.loadUserId(c)
-		if err != nil {
-			return err
-		}
+		userId := i.loadUserId(c)
 		err = i.pokemonRepository.Create(*p, userId)
 		if err != nil {
 			return err
 		}
-		return c.JSON(http.StatusCreated, ResponseWrapper{http.StatusCreated, p})
+		return c.JSON(http.StatusCreated, p)
 	}
 }
 
 func (i *PokemonApi) delete() func(c echo.Context) error {
 	return func(c echo.Context) error {
 		dex := c.Param("dex")
-		userId, err := i.loadUserId(c)
-		if err != nil {
-			return err
-		}
+		userId := i.loadUserId(c)
 
 		parsedDex, _ := strconv.Atoi(dex)
-		err = i.pokemonRepository.Delete(parsedDex, userId)
+		err := i.pokemonRepository.Delete(parsedDex, userId)
 		if err != nil {
 			return err
 		}
-		return c.JSON(http.StatusOK, ResponseWrapper{http.StatusOK, "pokemon with dex " + dex + " has been deleted"})
+		return c.JSON(http.StatusOK, "pokemon with dex "+dex+" has been deleted")
 	}
 }
 
-func (i *PokemonApi) loadUserId(c echo.Context) (int, error) {
+func (i *PokemonApi) loadUserId(c echo.Context) string {
 	token := c.(*middleware.AuthenticationContext).GetToken()
-	result, err := i.userRepository.Find(token.UID)
-	return result, err
+	return token.UID
 }
