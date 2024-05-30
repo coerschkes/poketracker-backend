@@ -27,7 +27,7 @@ func (i *PokemonMapper) MapRows(rows *sql.Rows) (interface{}, error) {
 
 func (i *PokemonMapper) mapRow(row *sql.Rows) (domain.Pokemon, error) {
 	pokemon := new(domain.Pokemon)
-	err := row.Scan(&pokemon.Dex, &pokemon.Name, pq.Array(&pokemon.Types), &pokemon.Shiny, &pokemon.Normal, &pokemon.Universal, &pokemon.Regional)
+	err := row.Scan(&pokemon.Dex, &pokemon.Name, pq.Array(&pokemon.Types), &pokemon.Shiny, &pokemon.Normal, &pokemon.Universal, &pokemon.Regional, &pokemon.NormalSpriteUrl, &pokemon.ShinySpriteUrl)
 	if err != nil {
 		return domain.Pokemon{}, err
 	}
