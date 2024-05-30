@@ -1,12 +1,5 @@
 create database poketracker;
 
-create table UserAccount
-(
-    id          serial unique primary key,
-    firebaseUid varchar(255) unique not null,
-    mail        varchar(255) unique not null
-);
-
 create table Pokemon
 (
     dex       int unique primary key,
@@ -16,7 +9,7 @@ create table Pokemon
     normal    boolean             not null,
     universal boolean             not null,
     regional  boolean             not null,
-    userId    serial              not null references UserAccount (id)
+    userId    varchar(255)        not null
 );
 
 create table Edition
@@ -29,7 +22,7 @@ create table PokemonEditionRelation
 (
     pokemonDexNr int          not null references Pokemon (dex),
     editionName  varchar(255) not null references Edition (name),
-    userId       serial       not null references UserAccount (id),
+    userId       varchar(255) not null,
     UNIQUE (pokemonDexNr, editionName, userId)
 );
 
