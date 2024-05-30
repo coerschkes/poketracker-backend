@@ -2,14 +2,16 @@ create database poketracker;
 
 create table Pokemon
 (
-    dex       int unique primary key,
-    name      varchar(255) unique not null,
-    types     varchar(50)[]       not null,
-    shiny     boolean             not null,
-    normal    boolean             not null,
-    universal boolean             not null,
-    regional  boolean             not null,
-    userId    varchar(255)        not null
+    dex             int unique primary key,
+    name            varchar(255) unique not null,
+    types           varchar(50)[]       not null,
+    shiny           boolean             not null,
+    normal          boolean             not null,
+    universal       boolean             not null,
+    regional        boolean             not null,
+    userId          varchar(255)        not null,
+    normalSpriteUrl varchar(255)        not null,
+    shinySpriteUrl  varchar(255)        not null
 );
 
 create table Edition
