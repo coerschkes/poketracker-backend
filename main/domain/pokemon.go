@@ -1,16 +1,18 @@
 package domain
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+)
 
 type (
 	Pokemon struct {
 		Dex             int      `json:"dex" validate:"required"`
 		Name            string   `json:"name" validate:"required"`
 		Types           []string `json:"types" validate:"required"`
-		Shiny           bool     `json:"shiny" validate:"required"`
-		Normal          bool     `json:"normal" validate:"required"`
-		Universal       bool     `json:"universal" validate:"required"`
-		Regional        bool     `json:"regional" validate:"required"`
+		Shiny           bool     `json:"shiny"`
+		Normal          bool     `json:"normal"`
+		Universal       bool     `json:"universal"`
+		Regional        bool     `json:"regional"`
 		Editions        []string `json:"editions" validate:"required"`
 		NormalSpriteUrl string   `json:"normalSpriteUrl" validate:"required"`
 		ShinySpriteUrl  string   `json:"shinySpriteUrl" validate:"required"`

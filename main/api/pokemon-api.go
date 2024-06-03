@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"poketracker-backend/main/domain"
@@ -73,7 +74,7 @@ func (i *PokemonApi) create() func(c echo.Context) error {
 		userId := i.loadUserId(c)
 		err = i.pokemonRepository.Create(*p, userId)
 		if err != nil {
-			return err
+			return errors.New("error while creating pokemon")
 		}
 		return c.JSON(http.StatusCreated, p)
 	}

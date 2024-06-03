@@ -53,7 +53,7 @@ func (i *PokemonRepositoryImpl) FindAll(userId string) ([]domain.Pokemon, error)
 func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId string) error {
 	_, err := i.Find(pokemon.Dex, userId)
 	if err != nil {
-		_, err := i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pq.Array(pokemon.Types), pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId)
+		_, err := i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pq.Array(pokemon.Types), pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId, pokemon.NormalSpriteUrl, pokemon.ShinySpriteUrl)
 		if err != nil {
 			return err
 		}

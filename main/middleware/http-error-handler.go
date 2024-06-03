@@ -36,6 +36,8 @@ func (h HttpErrorHandler) MapError(err error, c echo.Context) error {
 		return c.JSON(400, ErrorMessage{"Pokemon already exists"})
 	case "user already exists":
 		return c.JSON(400, ErrorMessage{"User already exists"})
+	case "error while creating pokemon":
+		return c.JSON(400, ErrorMessage{"Database constraint violated while creating pokemon"})
 	default:
 		return c.JSON(500, ErrorMessage{"Internal server error"})
 	}
