@@ -2,8 +2,8 @@ create database poketracker;
 
 create table Pokemon
 (
-    dex             int unique primary key,
-    name            varchar(255) unique not null,
+    dex             int  not null,
+    name            varchar(255) not null,
     types           varchar(50)[]       not null,
     shiny           boolean             not null,
     normal          boolean             not null,
@@ -11,7 +11,8 @@ create table Pokemon
     regional        boolean             not null,
     userId          varchar(255)        not null,
     normalSpriteUrl varchar(255)        not null,
-    shinySpriteUrl  varchar(255)        not null
+    shinySpriteUrl  varchar(255)        not null,
+    PRIMARY KEY(dex, userId)
 );
 
 create table Edition
@@ -22,10 +23,11 @@ create table Edition
 
 create table PokemonEditionRelation
 (
-    pokemonDexNr int          not null references Pokemon (dex),
+    dex int not null,
     editionName  varchar(255) not null references Edition (name),
-    userId       varchar(255) not null,
-    UNIQUE (pokemonDexNr, editionName, userId)
+    userId varchar(255) not null,
+    FOREIGN KEY  (dex, userId) REFERENCES Pokemon (dex, userId),
+    UNIQUE (dex, userId, editionName)
 );
 
 insert into edition

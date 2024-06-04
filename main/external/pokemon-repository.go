@@ -11,10 +11,10 @@ import (
 const (
 	selectPokemonQuery                 = "SELECT dex, name, types, shiny, normal, universal, regional, normalSpriteUrl, shinySpriteUrl FROM pokemon WHERE pokemon.userId = $1"
 	selectPokemonByDexQuery            = "SELECT dex, name, types, shiny, normal, universal, regional FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
-	selectEditionsQuery                = "SELECT editionname FROM pokemoneditionrelation WHERE pokemondexnr = $1 AND userId = $2"
+	selectEditionsQuery                = "SELECT editionname FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
 	insertIntoPokemonStatement         = "INSERT INTO pokemon (dex, name, types, shiny, normal, universal, regional, userId, normalSpriteUrl, shinySpriteUrl) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
-	insertIntoPokemonEditionsStatement = "INSERT INTO pokemoneditionrelation (pokemondexnr, userId, editionname) VALUES ($1, $2, $3)"
-	deleteFromPokemonEditionsStatement = "DELETE FROM pokemoneditionrelation WHERE pokemondexnr = $1 AND userId = $2"
+	insertIntoPokemonEditionsStatement = "INSERT INTO pokemoneditionrelation (dex, userId, editionname) VALUES ($1, $2, $3)"
+	deleteFromPokemonEditionsStatement = "DELETE FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
 	deleteFromPokemonStatement         = "DELETE FROM pokemon WHERE dex = $1 AND userId = $2"
 )
 
