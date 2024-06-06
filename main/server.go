@@ -3,7 +3,8 @@ package main
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/acme/autocert"
+	"log"
+	"net/http"
 	"poketracker-backend/main/api"
 	"poketracker-backend/main/domain"
 	"poketracker-backend/main/middleware"
@@ -22,9 +23,9 @@ func main() {
 	pokemonApi := api.NewPokemonApi()
 	RegisterApis(apiGroup, pokemonApi)
 
-	e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
-
-	e.Logger.Fatal(e.StartAutoTLS(":1323"))
+	if err := e.StartTLS(":1323", "../config/server.crt", "../config/server.key"); err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
 }
 
 func RegisterApis(group *echo.Group, apis ...api.GenericApi) {
