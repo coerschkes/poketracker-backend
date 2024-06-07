@@ -1,5 +1,4 @@
 create database poketracker;
-\connect poketracker;
 
 create table Pokemon
 (
