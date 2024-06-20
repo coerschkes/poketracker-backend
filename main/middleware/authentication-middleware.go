@@ -42,6 +42,8 @@ func (i *AuthenticationMiddleware) Chain(next echo.HandlerFunc) echo.HandlerFunc
 			return c.JSON(400, ErrorMessage{"Unable to parse authorization header}"})
 		}
 		responseToken, err := i.verifyToken(token)
+		log.Printf("token: %v\n", token)
+		log.Printf("responseToken: %v\n", responseToken)
 		if err != nil {
 			return c.JSON(401, ErrorMessage{"Token is invalid"})
 		}

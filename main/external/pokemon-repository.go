@@ -4,13 +4,14 @@ import (
 	"errors"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
+	"log"
 	"poketracker-backend/main/domain"
 	"strconv"
 )
 
 const (
 	selectPokemonQuery                 = "SELECT dex, name, types, shiny, normal, universal, regional, normalSpriteUrl, shinySpriteUrl FROM pokemon WHERE pokemon.userId = $1"
-	selectPokemonByDexQuery            = "SELECT dex, name, types, shiny, normal, universal, regional FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
+	selectPokemonByDexQuery            = "SELECT dex, name, types, shiny, normal, universal, regional, normalspriteurl, shinyspriteurl FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
 	selectEditionsQuery                = "SELECT editionname FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
 	insertIntoPokemonStatement         = "INSERT INTO pokemon (dex, name, types, shiny, normal, universal, regional, userId, normalSpriteUrl, shinySpriteUrl) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 	insertIntoPokemonEditionsStatement = "INSERT INTO pokemoneditionrelation (dex, userId, editionname) VALUES ($1, $2, $3)"
@@ -21,6 +22,7 @@ const (
 type PokemonRepository interface {
 	FindAll(userId string) ([]domain.Pokemon, error)
 	Create(pokemon domain.Pokemon, userId string) error
+	Update(pokemon domain.Pokemon, userId string) error
 	Delete(dex int, userId string) error
 	Find(dex int, userId string) (domain.Pokemon, error)
 }
@@ -36,6 +38,7 @@ func NewPokemonRepositoryImpl() *PokemonRepositoryImpl {
 func (i *PokemonRepositoryImpl) FindAll(userId string) ([]domain.Pokemon, error) {
 	query, err := i.connector.Query(selectPokemonQuery, NewPokemonMapper(), userId)
 	if err != nil {
+		log.Printf("pokemon-repository.FindAll(): error while fetching pokemon: %v\n", err)
 		return nil, errors.New("error while fetching pokemon")
 	}
 
@@ -43,6 +46,7 @@ func (i *PokemonRepositoryImpl) FindAll(userId string) ([]domain.Pokemon, error)
 	for index := range pokemon {
 		result, err2 := i.connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemon[index].Dex), userId)
 		if err2 != nil {
+			log.Printf("pokemon-repository.FindAll(): error while fetching editions: %v\n", err2)
 			return nil, errors.New("error while fetching pokemon")
 		}
 		pokemon[index].Editions = result.([]string)
@@ -53,13 +57,16 @@ func (i *PokemonRepositoryImpl) FindAll(userId string) ([]domain.Pokemon, error)
 func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId string) error {
 	_, err := i.Find(pokemon.Dex, userId)
 	if err != nil {
+		log.Printf("pokemon-repository.Create(): error while fetching pokemon: %v\n", err)
 		_, err := i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pq.Array(pokemon.Types), pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId, pokemon.NormalSpriteUrl, pokemon.ShinySpriteUrl)
 		if err != nil {
+			log.Printf("pokemon-repository.Create(): error while executing pokemon insert statement: %v\n", err)
 			return err
 		}
 		for index := range pokemon.Editions {
 			_, err := i.connector.Execute(insertIntoPokemonEditionsStatement, pokemon.Dex, userId, pokemon.Editions[index])
 			if err != nil {
+				log.Printf("pokemon-repository.Create(): error while executing editions insert statement: %v\n", err)
 				return err
 			}
 		}
@@ -69,10 +76,16 @@ func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId string) er
 	}
 }
 
+func (i *PokemonRepositoryImpl) Update(pokemon domain.Pokemon, userId string) error {
+	_ = i.Delete(pokemon.Dex, userId)
+	return i.Create(pokemon, userId)
+}
+
 func (i *PokemonRepositoryImpl) Delete(dex int, userId string) error {
 	rowsAffectedPokemon, err := i.connector.Execute(deleteFromPokemonStatement, dex, userId)
 	rowsAffectedEditions, err := i.connector.Execute(deleteFromPokemonEditionsStatement, dex, userId)
 	if err != nil {
+		log.Printf("pokemon-repository.Delete(): error while deleting pokemon: %v\n", err)
 		return errors.New("error while deleting pokemon")
 	} else if rowsAffectedPokemon == 0 || rowsAffectedEditions == 0 {
 		return errors.New("pokemon not found")
@@ -83,6 +96,7 @@ func (i *PokemonRepositoryImpl) Delete(dex int, userId string) error {
 func (i *PokemonRepositoryImpl) Find(dex int, userId string) (domain.Pokemon, error) {
 	query, err := i.connector.Query(selectPokemonByDexQuery, NewPokemonMapper(), userId, dex)
 	if err != nil {
+		log.Printf("pokemon-repository.Find(): error while fetching pokemon: %v\n", err)
 		return domain.Pokemon{}, errors.New("error while fetching pokemon")
 	}
 	pokemonResults := query.([]domain.Pokemon)
@@ -90,6 +104,7 @@ func (i *PokemonRepositoryImpl) Find(dex int, userId string) (domain.Pokemon, er
 		for index := range pokemonResults {
 			result, err := i.connector.Query(selectEditionsQuery, NewEditionMapper(), strconv.Itoa(pokemonResults[index].Dex), userId)
 			if err != nil {
+				log.Printf("pokemon-repository.Find(): error while fetching pokemon editions: %v\n", err)
 				return domain.Pokemon{}, errors.New("error while fetching pokemon")
 			}
 			pokemonResults[index].Editions = result.([]string)
