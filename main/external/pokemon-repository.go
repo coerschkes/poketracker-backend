@@ -10,14 +10,16 @@ import (
 )
 
 const (
-	selectPokemonQuery                 = "SELECT dex, name, types, shiny, normal, universal, regional, normalSpriteUrl, shinySpriteUrl FROM pokemon WHERE pokemon.userId = $1"
-	selectPokemonByDexQuery            = "SELECT dex, name, types, shiny, normal, universal, regional, normalspriteurl, shinyspriteurl FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
-	selectEditionsQuery                = "SELECT editionname FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
-	insertIntoPokemonStatement         = "INSERT INTO pokemon (dex, name, types, shiny, normal, universal, regional, userId, normalSpriteUrl, shinySpriteUrl) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
-	insertIntoPokemonEditionsStatement = "INSERT INTO pokemoneditionrelation (dex, userId, editionname) VALUES ($1, $2, $3)"
-	updatePokemonStatement             = "UPDATE pokemon SET name = $1, types = $2, shiny = $3, normal = $4, universal = $5, regional = $6, normalSpriteUrl = $7, shinySpriteUrl = $8 WHERE dex = $9 AND userId = $10"
-	deleteFromPokemonEditionsStatement = "DELETE FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
-	deleteFromPokemonStatement         = "DELETE FROM pokemon WHERE dex = $1 AND userId = $2"
+	selectPokemonQuery                    = "SELECT dex, name, types, shiny, normal, universal, regional, normalSpriteUrl, shinySpriteUrl FROM pokemon WHERE pokemon.userId = $1"
+	selectPokemonByDexQuery               = "SELECT dex, name, types, shiny, normal, universal, regional, normalspriteurl, shinyspriteurl FROM pokemon WHERE pokemon.userId = $1 and pokemon.dex = $2"
+	selectEditionsQuery                   = "SELECT editionname FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
+	insertIntoPokemonStatement            = "INSERT INTO pokemon (dex, name, types, shiny, normal, universal, regional, userId, normalSpriteUrl, shinySpriteUrl) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
+	insertIntoPokemonEditionsStatement    = "INSERT INTO pokemoneditionrelation (dex, userId, editionname) VALUES ($1, $2, $3)"
+	updatePokemonStatement                = "UPDATE pokemon SET name = $1, types = $2, shiny = $3, normal = $4, universal = $5, regional = $6, normalSpriteUrl = $7, shinySpriteUrl = $8 WHERE dex = $9 AND userId = $10"
+	deleteAllFromPokemonEditionsStatement = "DELETE FROM pokemoneditionrelation WHERE userId = $1"
+	deleteFromPokemonEditionsStatement    = "DELETE FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
+	deleteFromPokemonStatement            = "DELETE FROM pokemon WHERE dex = $1 AND userId = $2"
+	deleteAllFromPokemonStatement         = "DELETE FROM pokemon WHERE userId = $1"
 )
 
 type PokemonRepository interface {
@@ -25,6 +27,7 @@ type PokemonRepository interface {
 	Create(pokemon domain.Pokemon, userId string) error
 	Update(pokemon domain.Pokemon, userId string) error
 	Delete(dex int, userId string) error
+	DeleteAll(userId string) error
 	Find(dex int, userId string) (domain.Pokemon, error)
 }
 
@@ -135,4 +138,18 @@ func (i *PokemonRepositoryImpl) Find(dex int, userId string) (domain.Pokemon, er
 	} else {
 		return domain.Pokemon{}, errors.New("pokemon not found")
 	}
+}
+
+func (i *PokemonRepositoryImpl) DeleteAll(userId string) error {
+	_, err := i.connector.Execute(deleteAllFromPokemonEditionsStatement, userId)
+	if err != nil {
+		log.Printf("pokemon-repository.DeleteAll(): error while deleting pokemon editions: %v\n", err)
+		return errors.New("error while deleting pokemon")
+	}
+	_, err = i.connector.Execute(deleteAllFromPokemonStatement, userId)
+	if err != nil {
+		log.Printf("pokemon-repository.DeleteAll(): error while deleting pokemon: %v\n", err)
+		return errors.New("error while deleting pokemon")
+	}
+	return nil
 }

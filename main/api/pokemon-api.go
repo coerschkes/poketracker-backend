@@ -24,8 +24,9 @@ func (i *PokemonApi) RegisterRoutes(group *echo.Group) {
 	group.GET("/pokemon/:dex", i.find())
 	group.POST("/pokemon", i.create())
 	group.PUT("/pokemon", i.update())
+	group.DELETE("/pokemon", i.deleteAll())
 	group.DELETE("/pokemon/:dex", i.delete())
-	group.OPTIONS("/pokemon", i.options("GET, POST, PUT"))
+	group.OPTIONS("/pokemon", i.options("GET, POST, PUT, DELETE"))
 	group.OPTIONS("/pokemon/:dex", i.options("GET, DELETE"))
 }
 
@@ -126,4 +127,16 @@ func (i *PokemonApi) delete() func(c echo.Context) error {
 func (i *PokemonApi) loadUserId(c echo.Context) string {
 	token := c.(*middleware.AuthenticationContext).GetToken()
 	return token.UID
+}
+
+func (i *PokemonApi) deleteAll() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := i.loadUserId(c)
+		err := i.pokemonRepository.DeleteAll(userId)
+		if err != nil {
+			log.Printf("pokemon-api.deleteAll(): error while deleting pokemon: %v\n", err)
+			return err
+		}
+		return c.JSON(http.StatusOK, "pokemon for user "+userId+" have been deleted")
+	}
 }
