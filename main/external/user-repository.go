@@ -8,16 +8,16 @@ import (
 )
 
 const (
-	selectUserQuery = "SELECT userId, avatarUrl FROM userinfo WHERE userinfo.userId = $1"
-	createUserQuery = "INSERT INTO userinfo (userId, avatarurl) VALUES ($1, $2)"
-	updateUserQuery = "UPDATE userinfo SET avatarurl = $2 WHERE userinfo.userId = $1"
+	selectUserQuery = "SELECT userId, avatarUrl, bulkmode FROM userinfo WHERE userinfo.userId = $1"
+	createUserQuery = "INSERT INTO userinfo (userId, avatarurl, bulkmode) VALUES ($1, $2, $3)"
+	updateUserQuery = "UPDATE userinfo SET avatarurl = $2, bulkmode = $3 WHERE userinfo.userId = $1"
 	deleteUserQuery = "DELETE FROM userinfo WHERE userinfo.userId = $1"
 )
 
 type UserRepository interface {
 	Find(userId string) (interface{}, error)
-	Create(userId string, avatarUrl string) error
-	Update(userId string, avatarUrl string) error
+	Create(user *domain.User) error
+	Update(user *domain.User) error
 	Delete(userId string) error
 }
 
@@ -47,10 +47,10 @@ func (p UserRepositoryImpl) Find(userId string) (interface{}, error) {
 	return users[0], nil
 }
 
-func (p UserRepositoryImpl) Create(userId string, avatarUrl string) error {
-	_, err := p.Find(userId)
+func (p UserRepositoryImpl) Create(user *domain.User) error {
+	_, err := p.Find(user.UserId)
 	if err != nil {
-		_, err := p.connector.Execute(createUserQuery, userId, avatarUrl)
+		_, err := p.connector.Execute(createUserQuery, user.UserId, user.AvatarUrl, user.BulkMode)
 		if err != nil {
 			log.Printf("user-repository.Create(): error while executing user insert statement: %v\n", err)
 			return err
@@ -61,13 +61,10 @@ func (p UserRepositoryImpl) Create(userId string, avatarUrl string) error {
 	}
 }
 
-func (p UserRepositoryImpl) Update(userId string, avatarUrl string) error {
-	t, err := p.Find(userId)
-	log.Printf(userId)
-	log.Printf("user-repository.Update(): error: %v\n", err)
-	log.Printf("user-repository.Update(): user: %v\n", t)
+func (p UserRepositoryImpl) Update(user *domain.User) error {
+	_, err := p.Find(user.UserId)
 	if err == nil {
-		_, err := p.connector.Execute(updateUserQuery, userId, avatarUrl)
+		_, err := p.connector.Execute(updateUserQuery, user.UserId, user.AvatarUrl, user.BulkMode)
 		if err != nil {
 			log.Printf("user-repository.Update(): error while executing user update statement: %v\n", err)
 			return err

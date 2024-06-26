@@ -6,6 +6,7 @@ type (
 	User struct {
 		UserId    string `json:"userId" validate:"required"`
 		AvatarUrl string `json:"avatarUrl" validate:"required"`
+		BulkMode  bool   `json:"bulkMode"`
 	}
 	UserValidator struct {
 		Validator *validator.Validate

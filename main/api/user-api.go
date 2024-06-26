@@ -1,5 +1,6 @@
 package api
 
+import "C"
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -59,7 +60,7 @@ func (i *UserApi) create() echo.HandlerFunc {
 			log.Printf("user-api.create(): error while validating user: %v\n", err)
 			return err
 		}
-		err = i.userRepository.Create(p.UserId, p.AvatarUrl)
+		err = i.userRepository.Create(p)
 		if err != nil {
 			log.Printf("user-api.create(): error while creating user: %v\n", err)
 			return errors.New("error while creating user")
@@ -79,7 +80,7 @@ func (i *UserApi) update() echo.HandlerFunc {
 			log.Printf("user-api.update(): error while validating user: %v\n", err)
 			return err
 		}
-		err = i.userRepository.Update(p.UserId, p.AvatarUrl)
+		err = i.userRepository.Update(p)
 		if err != nil {
 			log.Printf("user-api.update(): error while updating user: %v\n", err)
 			return errors.New("error while updating user")

@@ -3,17 +3,17 @@ create database poketracker;
 
 create table Pokemon
 (
-    dex             int  not null,
-    name            varchar(255) not null,
-    types           varchar(50)[]       not null,
-    shiny           boolean             not null,
-    normal          boolean             not null,
-    universal       boolean             not null,
-    regional        boolean             not null,
-    userId          varchar(255)        not null references UserInfo (userId),
-    normalSpriteUrl varchar(255)        not null,
-    shinySpriteUrl  varchar(255)        not null,
-    PRIMARY KEY(dex, userId)
+    dex             int           not null,
+    name            varchar(255)  not null,
+    types           varchar(50)[] not null,
+    shiny           boolean       not null,
+    normal          boolean       not null,
+    universal       boolean       not null,
+    regional        boolean       not null,
+    userId          varchar(255)  not null references UserInfo (userId),
+    normalSpriteUrl varchar(255)  not null,
+    shinySpriteUrl  varchar(255)  not null,
+    PRIMARY KEY (dex, userId)
 );
 
 create table Edition
@@ -24,19 +24,19 @@ create table Edition
 
 create table PokemonEditionRelation
 (
-    dex int not null,
-    editionName  varchar(255) not null,
-    userId varchar(255) not null,
-    FOREIGN KEY  (dex) REFERENCES Pokemon (dex),
-    FOREIGN KEY (userId) REFERENCES UserInfo (userId),
+    dex         int          not null,
+    editionName varchar(255) not null,
+    userId      varchar(255) not null,
+    FOREIGN KEY (dex, userid) REFERENCES Pokemon (dex, userid),
     FOREIGN KEY (editionName) REFERENCES Edition (name),
     UNIQUE (dex, userId, editionName)
 );
 
 create table UserInfo
 (
-    userId varchar(255) not null primary key,
-    avatarUrl varchar(255) not null
+    userId    varchar(255) not null primary key,
+    avatarUrl varchar(255) not null,
+    bulkMode  boolean      not null
 );
 
 insert into edition

@@ -19,14 +19,14 @@ func (i *UserMapper) MapRows(rows *sql.Rows) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, domain.User{UserId: row[0], AvatarUrl: row[1]})
+		result = append(result, *row)
 	}
 	return result, nil
 }
 
-func (i *UserMapper) mapRow(row *sql.Rows) ([]string, error) {
-	s := make([]string, 2)
-	err := row.Scan(&s[0], &s[1])
+func (i *UserMapper) mapRow(row *sql.Rows) (*domain.User, error) {
+	s := new(domain.User)
+	err := row.Scan(&s.UserId, &s.AvatarUrl, &s.BulkMode)
 	if err != nil {
 		return s, err
 	}
