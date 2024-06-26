@@ -19,7 +19,8 @@ func main() {
 
 	apiGroup := e.Group("/api")
 	pokemonApi := api.NewPokemonApi()
-	RegisterApis(apiGroup, pokemonApi)
+	userApi := api.NewUserApi()
+	RegisterApis(apiGroup, pokemonApi, userApi)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

@@ -10,7 +10,7 @@ create table Pokemon
     normal          boolean             not null,
     universal       boolean             not null,
     regional        boolean             not null,
-    userId          varchar(255)        not null,
+    userId          varchar(255)        not null references UserInfo (userId),
     normalSpriteUrl varchar(255)        not null,
     shinySpriteUrl  varchar(255)        not null,
     PRIMARY KEY(dex, userId)
@@ -25,10 +25,18 @@ create table Edition
 create table PokemonEditionRelation
 (
     dex int not null,
-    editionName  varchar(255) not null references Edition (name),
+    editionName  varchar(255) not null,
     userId varchar(255) not null,
-    FOREIGN KEY  (dex, userId) REFERENCES Pokemon (dex, userId),
+    FOREIGN KEY  (dex) REFERENCES Pokemon (dex),
+    FOREIGN KEY (userId) REFERENCES UserInfo (userId),
+    FOREIGN KEY (editionName) REFERENCES Edition (name),
     UNIQUE (dex, userId, editionName)
+);
+
+create table UserInfo
+(
+    userId varchar(255) not null primary key,
+    avatarUrl varchar(255) not null
 );
 
 insert into edition

@@ -15,6 +15,7 @@ const (
 	selectEditionsQuery                = "SELECT editionname FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
 	insertIntoPokemonStatement         = "INSERT INTO pokemon (dex, name, types, shiny, normal, universal, regional, userId, normalSpriteUrl, shinySpriteUrl) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 	insertIntoPokemonEditionsStatement = "INSERT INTO pokemoneditionrelation (dex, userId, editionname) VALUES ($1, $2, $3)"
+	updatePokemonStatement             = "UPDATE pokemon SET name = $1, types = $2, shiny = $3, normal = $4, universal = $5, regional = $6, normalSpriteUrl = $7, shinySpriteUrl = $8 WHERE dex = $9 AND userId = $10"
 	deleteFromPokemonEditionsStatement = "DELETE FROM pokemoneditionrelation WHERE dex = $1 AND userId = $2"
 	deleteFromPokemonStatement         = "DELETE FROM pokemon WHERE dex = $1 AND userId = $2"
 )
@@ -55,7 +56,8 @@ func (i *PokemonRepositoryImpl) FindAll(userId string) ([]domain.Pokemon, error)
 }
 
 func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId string) error {
-	_, err := i.Find(pokemon.Dex, userId)
+	t, err := i.Find(pokemon.Dex, userId)
+	log.Printf("pokemon-repository.Create(): error: %v\n", t)
 	if err != nil {
 		log.Printf("pokemon-repository.Create(): error while fetching pokemon: %v\n", err)
 		_, err := i.connector.Execute(insertIntoPokemonStatement, pokemon.Dex, pokemon.Name, pq.Array(pokemon.Types), pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, userId, pokemon.NormalSpriteUrl, pokemon.ShinySpriteUrl)
@@ -77,8 +79,28 @@ func (i *PokemonRepositoryImpl) Create(pokemon domain.Pokemon, userId string) er
 }
 
 func (i *PokemonRepositoryImpl) Update(pokemon domain.Pokemon, userId string) error {
-	_ = i.Delete(pokemon.Dex, userId)
-	return i.Create(pokemon, userId)
+	rowsAffectedPokemon, err := i.connector.Execute(updatePokemonStatement, pokemon.Name, pq.Array(pokemon.Types), pokemon.Shiny, pokemon.Normal, pokemon.Universal, pokemon.Regional, pokemon.NormalSpriteUrl, pokemon.ShinySpriteUrl, pokemon.Dex, userId)
+	if err != nil {
+		log.Printf("pokemon-repository.Update(): error while executing pokemon update statement: %v\n", err)
+		return err
+	} else if rowsAffectedPokemon == 0 {
+		return errors.New("pokemon not found")
+	}
+	log.Printf("pokemon-repository.Update(): affected pokemon rows: %v\n", rowsAffectedPokemon)
+	rowsAffectedDeletedEditions, err := i.connector.Execute(deleteFromPokemonEditionsStatement, pokemon.Dex, userId)
+	if err != nil {
+		log.Printf("pokemon-repository.Update(): error while deleting editions: %v\n", err)
+		return err
+	}
+	log.Printf("pokemon-repository.Update(): affected deleted editions rows: %v\n", rowsAffectedDeletedEditions)
+	for index := range pokemon.Editions {
+		_, err := i.connector.Execute(insertIntoPokemonEditionsStatement, pokemon.Dex, userId, pokemon.Editions[index])
+		if err != nil {
+			log.Printf("pokemon-repository.Update(): error while executing editions insert statement: %v\n", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func (i *PokemonRepositoryImpl) Delete(dex int, userId string) error {
