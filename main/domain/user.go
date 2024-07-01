@@ -4,7 +4,6 @@ import "github.com/go-playground/validator/v10"
 
 type (
 	User struct {
-		UserId    string `json:"userId" validate:"required"`
 		AvatarUrl string `json:"avatarUrl" validate:"required"`
 		BulkMode  bool   `json:"bulkMode"`
 	}

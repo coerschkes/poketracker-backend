@@ -21,6 +21,7 @@ func (i *DatabaseConnector) Query(query string, mapper RowsMapper, args ...any) 
 	}
 
 	log.Printf("Executing query: %v\n", query)
+	log.Printf("Args: %v\n", args)
 	rows, err := i.Database.Query(query, args...)
 	if err != nil {
 		return nil, err

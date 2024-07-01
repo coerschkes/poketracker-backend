@@ -60,7 +60,8 @@ func (i *UserApi) create() echo.HandlerFunc {
 			log.Printf("user-api.create(): error while validating user: %v\n", err)
 			return err
 		}
-		err = i.userRepository.Create(p)
+		userId := i.loadUserId(c)
+		err = i.userRepository.Create(userId, p)
 		if err != nil {
 			log.Printf("user-api.create(): error while creating user: %v\n", err)
 			return errors.New("error while creating user")
@@ -80,7 +81,8 @@ func (i *UserApi) update() echo.HandlerFunc {
 			log.Printf("user-api.update(): error while validating user: %v\n", err)
 			return err
 		}
-		err = i.userRepository.Update(p)
+		userId := i.loadUserId(c)
+		err = i.userRepository.Update(userId, p)
 		if err != nil {
 			log.Printf("user-api.update(): error while updating user: %v\n", err)
 			return errors.New("error while updating user")

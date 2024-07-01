@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	selectUserQuery = "SELECT userId, avatarUrl, bulkmode FROM userinfo WHERE userinfo.userId = $1"
+	selectUserQuery = "SELECT avatarUrl, bulkmode FROM userinfo WHERE userinfo.userId = $1"
 	createUserQuery = "INSERT INTO userinfo (userId, avatarurl, bulkmode) VALUES ($1, $2, $3)"
 	updateUserQuery = "UPDATE userinfo SET avatarurl = $2, bulkmode = $3 WHERE userinfo.userId = $1"
 	deleteUserQuery = "DELETE FROM userinfo WHERE userinfo.userId = $1"
@@ -16,8 +16,8 @@ const (
 
 type UserRepository interface {
 	Find(userId string) (interface{}, error)
-	Create(user *domain.User) error
-	Update(user *domain.User) error
+	Create(userId string, user *domain.User) error
+	Update(userId string, user *domain.User) error
 	Delete(userId string) error
 }
 
@@ -47,10 +47,10 @@ func (p UserRepositoryImpl) Find(userId string) (interface{}, error) {
 	return users[0], nil
 }
 
-func (p UserRepositoryImpl) Create(user *domain.User) error {
-	_, err := p.Find(user.UserId)
+func (p UserRepositoryImpl) Create(userId string, user *domain.User) error {
+	_, err := p.Find(userId)
 	if err != nil {
-		_, err := p.connector.Execute(createUserQuery, user.UserId, user.AvatarUrl, user.BulkMode)
+		_, err := p.connector.Execute(createUserQuery, userId, user.AvatarUrl, user.BulkMode)
 		if err != nil {
 			log.Printf("user-repository.Create(): error while executing user insert statement: %v\n", err)
 			return err
@@ -61,10 +61,10 @@ func (p UserRepositoryImpl) Create(user *domain.User) error {
 	}
 }
 
-func (p UserRepositoryImpl) Update(user *domain.User) error {
-	_, err := p.Find(user.UserId)
+func (p UserRepositoryImpl) Update(userId string, user *domain.User) error {
+	_, err := p.Find(userId)
 	if err == nil {
-		_, err := p.connector.Execute(updateUserQuery, user.UserId, user.AvatarUrl, user.BulkMode)
+		_, err := p.connector.Execute(updateUserQuery, userId, user.AvatarUrl, user.BulkMode)
 		if err != nil {
 			log.Printf("user-repository.Update(): error while executing user update statement: %v\n", err)
 			return err

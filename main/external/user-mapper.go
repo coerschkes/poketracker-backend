@@ -26,7 +26,7 @@ func (i *UserMapper) MapRows(rows *sql.Rows) (interface{}, error) {
 
 func (i *UserMapper) mapRow(row *sql.Rows) (*domain.User, error) {
 	s := new(domain.User)
-	err := row.Scan(&s.UserId, &s.AvatarUrl, &s.BulkMode)
+	err := row.Scan(&s.AvatarUrl, &s.BulkMode)
 	if err != nil {
 		return s, err
 	}
